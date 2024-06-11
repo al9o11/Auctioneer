@@ -14,10 +14,12 @@ namespace Auctioneer.Controllers
     public class ListingsController : Controller
     {
         private readonly IListingService _listingService;
+        private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public ListingsController(IListingService listingService)
+        public ListingsController(IListingService listingService, IWebHostEnvironment hostingEnvironment)
         {
             _listingService = listingService;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         // GET: Listings
@@ -46,29 +48,41 @@ namespace Auctioneer.Controllers
         //    return View(listing);
         //}
 
-        //// GET: Listings/Create
-        //public IActionResult Create()
-        //{
-        //    ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id");
-        //    return View();
-        //}
+        // get: listings/create
+        public IActionResult Create()
+        {
+            return View();
+        }
 
-        //// POST: Listings/Create
-        //// To protect from overposting attacks, enable the specific properties you want to bind to.
-        //// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("Id,Title,Description,EstPrice,ImagePath,IsSold,IdentityUserId")] Listing listing)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(listing);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", listing.IdentityUserId);
-        //    return View(listing);
-        //}
+        // POST: Listings/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ListingVM listing)
+        {
+            if (listing.Image != null)
+            {
+                string uploadDir = Path.Combine(_hostingEnvironment.WebRootPath, "images");
+                string fileName = Guid.NewGuid().ToString() + "_" + listing.Image.FileName;
+                string filePath = Path.Combine(uploadDir, fileName);
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await listing.Image.CopyToAsync(fileStream);
+                }
+                var listobj = new Listing
+                {
+                    Title = listing.Title,
+                    Description = listing.Description,
+                    EstPrice = listing.EstPrice,
+                    ImagePath = Path.Combine("images", fileName),
+                    IdentityUserId = listing.IdentityUserId
+                };
+                await _listingService.Add(listobj);
+                return RedirectToAction("Index");
+            }
+            return View(listing);
+        }
 
         //// GET: Listings/Edit/5
         //public async Task<IActionResult> Edit(int? id)

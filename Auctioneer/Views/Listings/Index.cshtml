@@ -3,21 +3,22 @@
 @{
     ViewData["Title"] = "Index";
 }
+
 @if (!Model.Any())
 {
     <div style="align-content:center; margin:auto">
         <h3>No active listings</h3>
     </div>
-    
 }
-else{
+else
+{
     <h1>Current active Listings</h1>
     @foreach (var listing in Model)
     {
         <div class="container" style="background-color:antiquewhite; margin-top:50px; margin-bottom:50px; padding:20px; border-radius:10px">
             <div class="row">
                 <div class="col col-xs-6 col-lg-5">
-                    <img src="~/Images/@listing.ImagePath" style="max-width:400px; max-height:400px">
+                    <img src="@Url.Content("~/Images/" + listing.ImagePath)" alt="Listing Image" style="max-width: 400px; max-height: 400px;" />
                 </div>
                 <div class="col col-xs-6 col-lg-5">
                     <h5><a asp-action="Details" asp-route-id="@listing.Id" style="color:black">@listing.Title</a></h5>
@@ -27,8 +28,8 @@ else{
                 </div>
             </div>
         </div>
-
     }
 }
+
 
 
